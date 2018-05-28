@@ -49,7 +49,7 @@ class BDTB:
         self.default_title = u'百度贴吧'
         #是否写入楼分隔符的标记
         self.floor_tag = floor_tag
-        self.mysql = MYSQL()
+        #self.mysql = MYSQL()
 
     #获取该页帖子代码
     def get_page(self, page_num):
@@ -62,7 +62,7 @@ class BDTB:
             return page_code
         except urllib2.URLError as e:
             if hasattr(e, "reason"):
-                print "连接百度贴吧失败，错误原因", e.reason, e.code
+                print u"连接百度贴吧失败，错误原因", e.reason, e.code
                 return None
 
     #获取帖子标题
@@ -111,9 +111,9 @@ class BDTB:
                 #楼之间的分隔符
                 floor_line = '\n' + str(self.floor) + '楼--------------------\n'
                 self.file.write(floor_line)
-            #self.file.write(item)
+            self.file.write(item)
             #保存到数据库中
-            self.mysql.insert_data('bdtb', self.floor, item)
+            #self.mysql.insert_data('bdtb', self.floor, item)
             self.floor += 1
 
     def start(self):
@@ -122,20 +122,21 @@ class BDTB:
         title = self.get_title(index_page)
         self.set_file_title(title)
         if page_num == None:
-            print "URL已失效，请重试"
+            print u"URL已失效，请重试"
             return
         try:
-            print "该帖子共有" + str(page_num) + '页'
+            print u"该帖子共有%s页" % str(page_num)
             for i in range(1, int(page_num)+1):
                 page = self.get_page(i)
                 contents = self.get_content(page)
                 self.write_data(contents)
         except IOError as e:
-            print "写入异常，原因是" + e.message
+            print u"写入异常，原因是" + e.message
         finally:
-            print "写入完毕"
+            print u"写入完毕"
 
 
+"""
 #数据库操作
 #创建 MySql 的表时，表名和字段名外面的符号 ` 不是单引号，而是英文输入法状态下的反单引号
 #反引号是为了区分 MySql 关键字与普通字符而引入的符号，一般的，表名与字段名都使用反引号。
@@ -151,7 +152,7 @@ class MYSQL:
             #获取操作游标
             self.cur = self.db.cursor()
         except MySQLdb.Error as e:
-            print self.get_time(), "连接数据库失败，原因%d: %s" % (e.args[0], e.args[1])
+            print self.get_time(), u"连接数据库失败，原因%d: %s" % (e.args[0], e.args[1])
             
     def insert_data(self, table, num, content):
         try:
@@ -160,23 +161,23 @@ class MYSQL:
                 result = self.cur.execute(sql)
                 insert_id = self.db.insert_id()
                 self.db.commit()
-                print "%s   第%d层内容已保存" % (self.get_time(), num)
+                print u"%s   第%d层内容已保存" % (self.get_time(), num)
             except MySQLdb.Error as e:
                 #发生错误时回滚
                 self.db.rollback()
                 #主键唯一，无法插入
                 if "key 'PRIMARY'" in e.args[1]:
-                    print self.get_time(), "数据已存在，未插入"
+                    print self.get_time(), u"数据已存在，未插入"
                 else:
-                    print self.get_time(), "插入数据失败， 原因%d: %s" % (e.args[0],e.args[1])
+                    print self.get_time(), u"插入数据失败， 原因%d: %s" % (e.args[0],e.args[1])
         except MySQLdb.Error as e:
-            print self.get_time(), "数据库错误，原因%d： %s" % (e.args[0], e.args[1])
-            
+            print self.get_time(), u"数据库错误，原因%d： %s" % (e.args[0], e.args[1])
+"""            
             
 if __name__ == '__main__':
-    print "请输入帖子代号"
+    print u"请输入帖子代号"
     base_url = "https://tieba.baidu.com/p/" + str(raw_input())
-    see_lz = raw_input("是否只看楼主，是输入1，否输入0\n")
-    floor_tag = raw_input("是否写入楼层信息，是输入1，否输入0\n")
+    see_lz = raw_input("是否只看楼主，是输入1，否输入0\n".decode('utf-8').encode('gbk'))
+    floor_tag = raw_input("是否写入楼层信息，是输入1，否输入0\n".decode('utf-8').encode('gbk'))
     bdtb = BDTB(base_url, see_lz, floor_tag)
     bdtb.start()
